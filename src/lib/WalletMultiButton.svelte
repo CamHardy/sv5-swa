@@ -1,5 +1,5 @@
 <script>
-  import * as Avatar from "$lib/components/ui/avatar/index.js";
+  import * as Avatar from "$lib/components/ui/avatar";
   import { Button, buttonVariants } from "$lib/components/ui/button";
   import * as Dialog from "$lib/components/ui/dialog";
   import * as Popover from "$lib/components/ui/popover";
@@ -82,7 +82,7 @@
 			<div class="flex flex-col space-y-2">
 				{#each $walletStore.wallets as wallet}
 					{#if wallet.readyState === "Installed" && !wallet.adapter.connected}
-						<Button on:click={async () => { await handleConnect(wallet.adapter);}}>
+						<Button onclick={async () => { await handleConnect(wallet.adapter);}}>
 							<Avatar.Root class="p-1">
 								<Avatar.Image src={wallet.adapter.icon} alt={wallet.adapter.name} />
 								<Avatar.Fallback class="bg-slate-700">{wallet.adapter.name.substr(0, 2).toUpperCase()}</Avatar.Fallback>
