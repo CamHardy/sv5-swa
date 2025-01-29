@@ -1,4 +1,8 @@
 <script>
+  import * as Avatar from "$lib/components/ui/avatar/index.js";
+  import { Button, buttonVariants } from "$lib/components/ui/button";
+  import * as Dialog from "$lib/components/ui/dialog";
+  import * as Popover from "$lib/components/ui/popover";
 	import { walletStore } from "./walletStore.js";
 
 	/** 
@@ -55,104 +59,47 @@
 </script>
 
 {#if $walletStore.connected}
-	<button id="connected-wallet-btn" popovertarget="connected-wallet-menu">
-		<img
-			alt="icon of {$walletStore.adapter.name}"
-			src={$walletStore.adapter.icon}
-			width="38px"
-		/>
-		<span>{abbrAddress($walletStore.publicKey.toBase58())}</span></button
-	>
-	<ul id="connected-wallet-menu" popover="auto">
-		<li><button class="wallet-op-btn" onclick={copyToClipboard}>Copy Address</button></li>
-		<li><button class="wallet-op-btn" onclick={handleDisconnect}>Disconnect</button></li>
-	</ul>
+	<Popover.Root>
+		<Popover.Trigger class={buttonVariants()}>
+			<Avatar.Root class="p-1">
+				<Avatar.Image src={$walletStore.adapter.icon} alt={$walletStore.adapter.name} />
+				<Avatar.Fallback>{$walletStore.adapter.name[0].toUpperCase()}</Avatar.Fallback>
+			</Avatar.Root>
+			<span>{abbrAddress($walletStore.publicKey.toBase58())}</span>
+		</Popover.Trigger>
+		<Popover.Content side="bottom" class="flex flex-col space-y-2">
+			<Button onclick={copyToClipboard}>Copy Address</Button>
+			<Button onclick={handleDisconnect}>Disconnect</Button>
+		</Popover.Content>
+	</Popover.Root>
 {:else}
-	<button id="select-wallet-btn" popovertarget="select-wallet-modal">Connect Solana Wallet</button>
-	<ul id="select-wallet-modal" popover="auto">
-		{#each installedWalletAdaptersWithReadyState as wallet}
-			<li>
-				{#if !wallet.adapter.connected}
-					<button class="wallet-item-btn"
-						onclick={async () => {
-								await handleConnect(wallet.adapter);
-						}}
-						type="button"
-					>
-						<img
-							alt="icon of {wallet.adapter.name}"
-							src={wallet.adapter.icon}
-							width="38px"
-						/>
-						<span>{wallet.adapter.name}</span>
-					</button>
-				{/if}
-			</li>
-		{/each}
-	</ul>
+	<Dialog.Root>
+		<Dialog.Trigger class={buttonVariants()}>Connect Wallet</Dialog.Trigger>
+		<Dialog.Content class="sm:max-w-[300px]">
+			<Dialog.Header>
+				<Dialog.Title>Choose your wallet</Dialog.Title>
+			</Dialog.Header>
+			<div class="flex flex-col space-y-2">
+				{#each $walletStore.wallets as wallet}
+					{#if wallet.readyState === "Installed" && !wallet.adapter.connected}
+						<Button on:click={async () => { await handleConnect(wallet.adapter);}}>
+							<Avatar.Root class="p-1">
+								<Avatar.Image src={wallet.adapter.icon} alt={wallet.adapter.name} />
+								<Avatar.Fallback class="bg-slate-700">{wallet.adapter.name.substr(0, 2).toUpperCase()}</Avatar.Fallback>
+							</Avatar.Root>
+							<span>{wallet.adapter.name}</span>
+						</Button>
+					{:else}
+						<Button disabled>
+							<Avatar.Root class="p-1">
+								<Avatar.Image src={wallet.adapter.icon} alt={wallet.adapter.name} />
+								<Avatar.Fallback>{wallet.adapter.name.substr(0, 2).toUpperCase()}</Avatar.Fallback>
+							</Avatar.Root>
+							<span>{wallet.adapter.name}</span>
+						</Button>
+					{/if}
+				{/each}
+			</div>
+		</Dialog.Content>
+	</Dialog.Root>
 {/if}
-
-<style>
-	ul {
-		list-style-type: none;
-		padding: 0;
-		margin: 0;
-	}
-	li {
-		list-style-type: none;
-	}
-	[popover] {
-		margin: 0;
-		padding: 0;
-		border: 0;
-	}
-
-	#connected-wallet-btn {
-		anchor-name: --connected-wallet-btn;
-		display: flex;
-		align-items: center;
-	}
-	#connected-wallet-btn img {
-		margin-right: 10px;
-	}
-	#connected-wallet-btn span {
-		flex: 1;
-	}
-
-	#connected-wallet-menu {
-		position: absolute;
-		position-anchor: --connected-wallet-btn;
-		right: anchor(right);
-		top: anchor(bottom);
-		inset-area: bottom;
-	}
-
-	#select-wallet-btn {
-		anchor-name: --select-wallet-btn;
-	}
-	#select-wallet-modal {
-		position-anchor: --select-wallet-btn;
-		right: anchor(right);
-		bottom: anchor(bottom);
-		inset-area: bottom;
-	}
-
-	.wallet-item-btn {
-		display: flex;
-		align-items: center; 
-		justify-content: flex-start; 
-		width: 100%; 
-		padding: 10px; 
-		border: none; 
-		background: none; 
-		cursor: pointer; 
-	}
-
-	.wallet-item-btn img {
-		margin-right: 10px; 
-	}
-
-	.wallet-item-btn span {
-		flex: 1; 
-	}
-</style>
